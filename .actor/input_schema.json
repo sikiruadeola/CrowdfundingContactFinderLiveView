@@ -1,0 +1,77 @@
+{
+    "title": "Crowdfunding Contact Finder, Live View",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "categoryId": {
+            "title": "Category",
+            "type": "integer",
+            "description": "Which Kickstarter category to search, as a category id. Design is 7, Film and Video is 10, Games is 12, Technology is 16. One category per run.",
+            "editor": "number",
+            "default": 16
+        },
+        "states": {
+            "title": "Project states to include",
+            "type": "array",
+            "description": "Live campaigns are still actively raising money. Failed campaigns already ended without reaching their goal. Successful projects are never searched.",
+            "editor": "select",
+            "items": {
+                "type": "string",
+                "enum": ["live", "failed"],
+                "enumTitles": ["Live", "Failed"]
+            },
+            "default": ["live", "failed"]
+        },
+        "sort": {
+            "title": "Sort order",
+            "type": "string",
+            "description": "How Kickstarter orders results within each state.",
+            "editor": "select",
+            "enum": ["newest", "end_date", "magic", "popularity"],
+            "enumTitles": ["Newest", "Ending soonest", "Magic (Kickstarter's own mix)", "Popularity"],
+            "default": "newest"
+        },
+        "maxPagesPerState": {
+            "title": "Maximum search pages per state",
+            "type": "integer",
+            "description": "Kickstarter caps out at roughly two hundred pages per query regardless.",
+            "editor": "number",
+            "default": 200
+        },
+        "maxProjects": {
+            "title": "Maximum underfunded projects to process (0 = unlimited)",
+            "type": "integer",
+            "description": "Stop after this many. Keep this small for a first test, since every project here reads through a real, slower browser.",
+            "editor": "number",
+            "default": 5
+        },
+        "crawlCreatorSites": {
+            "title": "Also read the creator's own website",
+            "type": "boolean",
+            "description": "Reads the homepage of any linked site found, still through the same cleared browser.",
+            "default": true
+        },
+        "maxSitePagesEach": {
+            "title": "Maximum outside sites to check per project",
+            "type": "integer",
+            "description": "How many of a project's own linked websites to check before moving on.",
+            "editor": "number",
+            "default": 2
+        },
+        "minimumScore": {
+            "title": "Minimum quality score to keep an address",
+            "type": "integer",
+            "description": "Zero to one hundred. Fifty five keeps medium and high confidence, seventy five keeps high confidence only.",
+            "editor": "number",
+            "default": 0
+        },
+        "challengeWaitMinutes": {
+            "title": "Minutes to wait for a human to clear a challenge",
+            "type": "integer",
+            "description": "How long the run pauses and waits, live view open, before giving up if nobody solves what is shown.",
+            "editor": "number",
+            "default": 15
+        }
+    },
+    "required": ["categoryId"]
+}
