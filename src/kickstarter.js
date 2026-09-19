@@ -24,7 +24,7 @@ const DISCOVER_ROOT = 'https://www.kickstarter.com/discover/advanced';
  * clicking around, not a script hammering the site.
  */
 async function realNavigationGetJson(page, url) {
-    await sleep(800 + Math.random() * 700);
+    await sleep(2500 + Math.random() * 2000);
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     if (response && !response.ok()) throw new Error(`status ${response.status()}`);
     const text = await page.evaluate(() => document.body.innerText);
@@ -32,7 +32,7 @@ async function realNavigationGetJson(page, url) {
 }
 
 async function realNavigationGetHtml(page, url) {
-    await sleep(800 + Math.random() * 700);
+    await sleep(2500 + Math.random() * 2000);
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     if (response && !response.ok()) throw new Error(`status ${response.status()}`);
     return page.content();
