@@ -26,7 +26,12 @@ const DISCOVER_ROOT = 'https://www.kickstarter.com/discover/advanced';
 async function realNavigationGetJson(page, url) {
     await sleep(2500 + Math.random() * 2000);
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    if (response && !response.ok()) throw new Error(`status ${response.status()}`);
+    if (response && !response.ok()) {
+        const title = await page.title().catch(() => '');
+        const bodyStart = await page.evaluate(() => document.body.innerText.slice(0, 400)).catch(() => '');
+        log.warning(`Diagnostic for the ${response.status()} on ${url}: title is "${title}", body starts with: ${bodyStart}`);
+        throw new Error(`status ${response.status()}`);
+    }
     const text = await page.evaluate(() => document.body.innerText);
     return JSON.parse(text);
 }
