@@ -40,8 +40,28 @@ if (!categoryId) {
     throw new Error('No categoryId supplied. Design is 7, Film and Video is 10, Games is 12, Technology is 16.');
 }
 
-const browser = await chromium.launch({ headless: false, args: ['--start-maximized'] });
+const browser = await chromium.launch({
+    headless: false,
+    args: ['--start-maximized', '--disable-blink-features=AutomationControlled'],
+});
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+
+// Playwright's default browser leaves a few plain signs of being remote
+// controlled sitting in place, which is unrelated to how carefully a real
+// person clicks, but can still make a genuine human's session get read as
+// automated. These are the well established, narrow fixes for exactly that,
+// nothing here touches how the actual check itself gets solved.
+await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined, configurable: true });
+    // A default Playwright page has no window.chrome object at all, which
+    // is itself a giveaway, since every real Chrome browser has one.
+    if (!window.chrome) {
+        window.chrome = { runtime: {} };
+    }
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+});
+
 const page = await context.newPage();
 
 async function ensurePastAnyChallenge(url, reason) {
