@@ -1,0 +1,12 @@
+{
+    "actorSpecification": 1,
+    "name": "crowdfunding-contact-finder-liveview",
+    "title": "Crowdfunding Contact Finder, Live View",
+    "description": "Finds contact addresses for underfunded Kickstarter creators. Pauses and streams a live interactive view whenever Cloudflare shows a check, so a real person can solve it by hand.",
+    "version": "0.0",
+    "dockerfile": "../Dockerfile",
+    "input": "./input_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}
