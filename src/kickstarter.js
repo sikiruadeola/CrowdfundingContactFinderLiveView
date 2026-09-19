@@ -15,23 +15,31 @@ import { log } from 'crawlee';
 const DISCOVER_ROOT = 'https://www.kickstarter.com/discover/advanced';
 
 /**
- * Runs inside the already cleared page. Returns the parsed JSON body or
- * throws, so the caller can tell a real failure apart from an empty page.
+ * A background fetch call from inside the page carries different signals
+ * than a real page visit and got blocked by Cloudflare even right after the
+ * browser itself had already cleared its check. A real navigation, the same
+ * thing a person does by typing an address and pressing enter, is what
+ * actually works reliably, so every request here is a real page.goto, never
+ * a fetch. A short pause between requests keeps this looking like a person
+ * clicking around, not a script hammering the site.
  */
-async function inPageFetchJson(page, url) {
-    return page.evaluate(async (u) => {
-        const response = await fetch(u, { credentials: 'include' });
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        return response.json();
-    }, url);
+async function realNavigationGetJson(page, url) {
+    await sleep(800 + Math.random() * 700);
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    if (response && !response.ok()) throw new Error(`status ${response.status()}`);
+    const text = await page.evaluate(() => document.body.innerText);
+    return JSON.parse(text);
 }
 
-async function inPageFetchHtml(page, url) {
-    return page.evaluate(async (u) => {
-        const response = await fetch(u, { credentials: 'include' });
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        return response.text();
-    }, url);
+async function realNavigationGetHtml(page, url) {
+    await sleep(800 + Math.random() * 700);
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    if (response && !response.ok()) throw new Error(`status ${response.status()}`);
+    return page.content();
+}
+
+function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
 }
 
 /**
@@ -56,7 +64,7 @@ export async function discoverProjects(page, { categoryId, state, sort = 'newest
 
         let body;
         try {
-            body = await inPageFetchJson(page, url);
+            body = await realNavigationGetJson(page, url);
         } catch (error) {
             log.warning(`Discovery page ${p} for state ${state} failed: ${error.message}. Stopping this state here.`);
             break;
@@ -81,7 +89,7 @@ export async function discoverProjects(page, { categoryId, state, sort = 'newest
  */
 export async function fetchProjectPage(page, projectUrl) {
     try {
-        const html = await inPageFetchHtml(page, projectUrl);
+        const html = await realNavigationGetHtml(page, projectUrl);
         const $ = cheerio.load(html);
 
         const storyText = $('body').text().replace(/\s+/g, ' ').slice(0, 200000);
