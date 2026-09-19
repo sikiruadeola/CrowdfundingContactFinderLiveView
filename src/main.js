@@ -44,7 +44,22 @@ const browser = await chromium.launch({
     headless: false,
     args: ['--start-maximized', '--disable-blink-features=AutomationControlled'],
 });
-const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+
+// A fresh residential address, since the address this run would otherwise
+// share with every earlier test today may already be under closer watch
+// after that much repeated contact.
+const proxyConfiguration = await Actor.createProxyConfiguration({ groups: ['RESIDENTIAL'] });
+const proxyUrl = await proxyConfiguration.newUrl();
+const parsedProxy = new URL(proxyUrl);
+
+const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    proxy: {
+        server: `${parsedProxy.protocol}//${parsedProxy.hostname}:${parsedProxy.port}`,
+        username: parsedProxy.username,
+        password: parsedProxy.password,
+    },
+});
 
 // Playwright's default browser leaves a few plain signs of being remote
 // controlled sitting in place, which is unrelated to how carefully a real
