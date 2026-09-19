@@ -125,12 +125,18 @@ if (underfunded.length === 0) {
 
 let withEmail = 0;
 
-for (const project of underfunded) {
+for (const [index, project] of underfunded.entries()) {
+    if (index > 0) {
+        // A real, generous pause between every single project, not just
+        // after a block, since today's heavy testing on this same site may
+        // have already put it in a more watchful mood than usual.
+        await new Promise((r) => setTimeout(r, 8000 + Math.random() * 5000));
+    }
     const projectUrl = project?.urls?.web?.project;
     const creatorUrl = project?.creator?.urls?.web?.user;
     if (!projectUrl) continue;
 
-    const { storyText, links } = await fetchProjectPage(page, projectUrl);
+    let { storyText, links } = await fetchProjectPage(page, projectUrl);
 
     if (!(await looksClearedOfChallenge(page))) {
         await waitForHumanToClearChallenge(page, {
@@ -138,6 +144,14 @@ for (const project of underfunded) {
             timeoutMs: challengeWaitMinutes * 60 * 1000,
             isCleared: () => looksClearedOfChallenge(page),
         });
+
+        // The very next request right after a clear is exactly what tends
+        // to look like more of the same burst that raised suspicion in the
+        // first place. A real cool down here, then actually retrying the
+        // page that failed instead of moving on with nothing, is the fix.
+        log.info('Cooling down for a minute before retrying the page that was blocked.');
+        await new Promise((r) => setTimeout(r, 60000));
+        ({ storyText, links } = await fetchProjectPage(page, projectUrl));
     }
 
     const hits = [...extractEmails(storyText, { source: 'projectStory', sourceUrl: projectUrl })];
